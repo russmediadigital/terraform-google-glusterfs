@@ -42,7 +42,17 @@ resource "google_compute_instance" "default" {
   }
 
   metadata_startup_script = element(
-    formatlist("%v", data.templatefile.provision_script.*.rendered),
+    formatlist("%v", templatefile(
+  "${path.module}/files/glusterfs_provision_server.sh",
+  {
+      cluster_size    = var.cluster_size
+      server_prefix   = var.server_prefix
+      volume_names    = join(" ", var.volume_names)
+      group           = var.group
+      user            = var.user
+      replicas_number = var.replicas_number
+  }
+)),
     count.index,
   )
 
@@ -70,39 +80,19 @@ resource "google_compute_disk" "default" {
   }
 }
 
-data "templatefile" "provision_script" {
-  count    = var.cluster_size
-  template = file("${path.module}/files/glusterfs_provision_server.sh")
-
-  vars = {
-    cluster_size    = var.cluster_size
-    server_prefix   = var.server_prefix
-    volume_names    = join(" ", var.volume_names)
-    group           = var.group
-    user            = var.user
-    replicas_number = var.replicas_number
-  }
-}
-
-data "templatefile" "endpoint" {
-  count    = var.cluster_size
-  template = file("${path.module}/files/endpoint.json.tpl")
-
-  vars = {
+locals {
+  kubernetes_endpoints: templatefile("${path.module}/files/kubernetes_endpoints.json.tpl", 
+  {
+    endpoints = join(",\n    ", 
+    templatefile("${path.module}/files/endpoint.json.tpl", {
     ip = element(
       google_compute_instance.default.*.network_interface.0.network_ip,
       count.index,
     )
-  }
-}
-
-data "templatefile" "kubernetes_endpoints" {
-  template = file("${path.module}/files/kubernetes_endpoints.json.tpl")
-
-  vars = {
-    endpoints                = join(",\n    ", data.templatefile.endpoint.*.rendered)
+  }))
     kubernetes_endpoint_name = var.kubernetes_endpoint_name
   }
+  )
 }
 
 resource "google_compute_subnetwork" "default" {
