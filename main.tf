@@ -42,7 +42,7 @@ resource "google_compute_instance" "default" {
   }
 
   metadata_startup_script = element(
-    formatlist("%v", data.template_file.provision_script.*.rendered),
+    formatlist("%v", data.templatefile.provision_script.*.rendered),
     count.index,
   )
 
@@ -70,7 +70,7 @@ resource "google_compute_disk" "default" {
   }
 }
 
-data "template_file" "provision_script" {
+data "templatefile" "provision_script" {
   count    = var.cluster_size
   template = file("${path.module}/files/glusterfs_provision_server.sh")
 
@@ -100,7 +100,7 @@ data "templatefile" "kubernetes_endpoints" {
   template = file("${path.module}/files/kubernetes_endpoints.json.tpl")
 
   vars = {
-    endpoints                = join(",\n    ", data.template_file.endpoint.*.rendered)
+    endpoints                = join(",\n    ", data.templatefile.endpoint.*.rendered)
     kubernetes_endpoint_name = var.kubernetes_endpoint_name
   }
 }
