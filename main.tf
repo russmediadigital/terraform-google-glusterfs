@@ -81,7 +81,7 @@ resource "google_compute_disk" "default" {
 }
 
 locals {
-  kubernetes_endpoints: templatefile("${path.module}/files/kubernetes_endpoints.json.tpl", 
+  kubernetes_endpoints = templatefile("${path.module}/files/kubernetes_endpoints.json.tpl", 
   {
     endpoints = join(",\n    ", 
     templatefile("${path.module}/files/endpoint.json.tpl", {
