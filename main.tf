@@ -84,7 +84,7 @@ data "template_file" "provision_script" {
   }
 }
 
-data "template_file" "endpoint" {
+data "templatefile" "endpoint" {
   count    = var.cluster_size
   template = file("${path.module}/files/endpoint.json.tpl")
 
@@ -96,7 +96,7 @@ data "template_file" "endpoint" {
   }
 }
 
-data "template_file" "kubernetes_endpoints" {
+data "templatefile" "kubernetes_endpoints" {
   template = file("${path.module}/files/kubernetes_endpoints.json.tpl")
 
   vars = {
